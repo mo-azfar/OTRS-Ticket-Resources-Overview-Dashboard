@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<otrs_config version="2.0" init="Config">
+	<Setting Name="DashboardBackend###0271-TicketResourcesOverview" Required="0" Valid="1">
+        <Description Translatable="1">Parameters for the dashboard backend of the resources overview widget of the agent interface. "Group" is used to restrict the access to the plugin (e. g. Group: admin;group1;group2;). "States" is a list of states, the key is the sort order of the state in the widget. "Default" determines if the plugin is enabled by default or if the user needs to enable it manually. "CacheTTLLocal" is the cache time in minutes for the plugin. "Mandatory" determines if the plugin is always shown and can not be removed by agents.</Description>
+        <Navigation>Frontend::Agent::View::Dashboard</Navigation>
+        <Value>
+            <Hash>
+                <Item Key="Module">Kernel::Output::HTML::Dashboard::TicketResourcesOverview</Item>
+                <Item Key="Title" Translatable="1">Ticket Resources (Owner) Overview</Item>
+                <Item Key="Description" Translatable="1">Provides a matrix overview of the tickets per state per agent</Item>
+                <Item Key="Permission">rw</Item>
+                <Item Key="Block">ContentLarge</Item>
+                <Item Key="Group"></Item>
+                <Item Key="Default">1</Item>
+                <Item Key="Sort">SortBy=Age;OrderBy=Up</Item>
+                <Item Key="CacheTTLLocal">2</Item>
+                <Item Key="States">
+                    <Hash>
+                        <Item Key="1">new</Item>
+                        <Item Key="4">open</Item>
+                        <Item Key="6">pending reminder</Item>
+                    </Hash>
+                </Item>
+                <Item Key="Mandatory">0</Item>
+            </Hash>
+        </Value>
+    </Setting>
+</otrs_config>
