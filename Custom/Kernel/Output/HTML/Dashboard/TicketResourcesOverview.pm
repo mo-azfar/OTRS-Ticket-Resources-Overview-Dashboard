@@ -1,3 +1,8 @@
+# --
+# Copyright (C) 2001-2021 OTRS AG, https://otrs.com/
+# Copyright (C) 2021 Znuny GmbH, https://znuny.org/
+# Copyright (C) 2023 mo-azfar, https://github.com/mo-azfar
+# --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
 # did not receive this file, see https://www.gnu.org/licenses/gpl-3.0.txt.
@@ -51,6 +56,27 @@ sub Run {
     my ( $Self, %Param ) = @_;
 
     my $CacheKey   = 'User' . '-' . $Self->{UserID} . '-ResourcesOverview';
+	
+	# get layout object
+    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
+
+    # check for refresh time
+    my $Refresh = '';
+    if ( $Self->{UserRefreshTime} ) {
+        $Refresh = 60 * $Self->{UserRefreshTime};
+        my $NameHTML = $Self->{Name};
+        $NameHTML =~ s{-}{_}xmsg;
+
+        # send data to JS
+        $LayoutObject->AddJSData(
+            Key   => 'QueueOverview',
+            Value => {
+                Name        => $Self->{Name},
+                NameHTML    => $NameHTML,
+                RefreshTime => $Refresh,
+            },
+        );
+    }
 
     # get cache object
     my $CacheObject = $Kernel::OM->Get('Kernel::System::Cache');
@@ -129,16 +155,29 @@ sub Run {
             Limit    => 100_000,
         );
 
-        # Count of tickets per UserID / OwnerID.
-        my $TicketCountByOwnerID = $TicketObject->TicketCountByAttribute(
-            Attribute => 'OwnerID',
-            TicketIDs => \@StateOrderTicketIDs,
-        );
+		my %OwnerCount;
+		
+		#return OwnerID => Count of ticket
+		for my $FoundTicketID (@StateOrderTicketIDs) 
+		{   
+			my ($OwnerID, $Owner) = $TicketObject->OwnerCheck(
+				TicketID => $FoundTicketID,
+			);
+			
+			if ( exists($OwnerCount{$OwnerID}) )
+			{
+				$OwnerCount{$OwnerID} = $OwnerCount{$OwnerID}+1;
+			}
+			else
+			{
+				$OwnerCount{$OwnerID} = 1;
+			}
+        }
 
         # Gather ticket count for corresponding Owner<-> State.
         for my $ResourcesID (@ResourcesIDs) {
             push @{ $Results{ $UserList{$ResourcesID} } },
-                $TicketCountByOwnerID->{$ResourcesID} ? $TicketCountByOwnerID->{$ResourcesID} : 0;
+                $OwnerCount{$ResourcesID} ? $OwnerCount{$ResourcesID} : 0;
         }
     }
 
@@ -147,9 +186,6 @@ sub Run {
     for my $StateOrder ( sort { $a <=> $b } keys %ConfiguredStates ) {
         push @Headers, $ConfiguredStates{$StateOrder};
     }
-
-    # get layout object
-    my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
 
     for my $HeaderItem (@Headers) {
         $LayoutObject->Block(
@@ -245,24 +281,6 @@ sub Run {
             Data => {
                 ColumnCount => ( scalar keys %ConfiguredStates ) + 2,
             }
-        );
-    }
-
-    # check for refresh time
-    my $Refresh = '';
-    if ( $Self->{UserRefreshTime} ) {
-        $Refresh = 60 * $Self->{UserRefreshTime};
-        my $NameHTML = $Self->{Name};
-        $NameHTML =~ s{-}{_}xmsg;
-
-        # send data to JS
-        $LayoutObject->AddJSData(
-            Key   => 'ResourcesOverview',
-            Value => {
-                Name        => $Self->{Name},
-                NameHTML    => $NameHTML,
-                RefreshTime => $Refresh,
-            },
         );
     }
 

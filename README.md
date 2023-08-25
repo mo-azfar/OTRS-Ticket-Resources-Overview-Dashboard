@@ -1,9 +1,10 @@
-# OTRS-Ticket-Resources-Overview-Dashboard
-- For OTRS CE v 6.0.x (Build based on OTRS 6.0.30)  
-- OTRS Dashboard to Display Resources (Ticket Owner) Per Ticket States
+# Znuny-Ticket-Resources-Overview-Dashboard
+- For Znuny 6.5.x and 7.0.x (Build based on Znuny 7.0.9)  
+- For older version of Znuny LTS / OTRS 6 (CE), you may try to apply this manually. Not tested but should work.
+- Dashboard to Display Resources (Ticket Owner) Per Ticket States
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/MohdAzfar?locale.x=en_US)    
 
 
-[![Capture.png](https://i.postimg.cc/gkhGn08m/Capture.png)](https://postimg.cc/gnGC7mgT)  
+![owner-overview](owner-overview.png)
 
