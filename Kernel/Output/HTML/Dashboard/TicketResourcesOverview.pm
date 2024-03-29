@@ -1,7 +1,6 @@
 # --
-# Copyright (C) 2001-2021 OTRS AG, https://otrs.com/
 # Copyright (C) 2021 Znuny GmbH, https://znuny.org/
-# Copyright (C) 2023 mo-azfar, https://github.com/mo-azfar
+# Copyright (C) 2024 mo-azfar, https://github.com/mo-azfar/
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
@@ -55,9 +54,9 @@ sub Config {
 sub Run {
     my ( $Self, %Param ) = @_;
 
-    my $CacheKey   = 'User' . '-' . $Self->{UserID} . '-ResourcesOverview';
-	
-	# get layout object
+    my $CacheKey = 'User' . '-' . $Self->{UserID} . '-ResourcesOverview';
+
+    # get layout object
     my $LayoutObject = $Kernel::OM->Get('Kernel::Output::HTML::Layout');
 
     # check for refresh time
@@ -89,46 +88,85 @@ sub Run {
 
     # get configured states, get their state ID and test if they exist while we do it
     my %States;
+    my %ConfiguredStates;
+
     my $StateIDURL;
-    my %ConfiguredStates = %{ $Self->{Config}->{States} };
-    for my $StateOrder ( sort { $a <=> $b } keys %ConfiguredStates ) {
-        my $State = $ConfiguredStates{$StateOrder};
+    my $SearchParamType;
+    my $SearchParamURL;
+    my $StateDisplay = $Self->{Config}->{StateDisplay};
 
-        # check if state is found, to record StateID
-        my $StateID = $Kernel::OM->Get('Kernel::System::State')->StateLookup(
-            State => $State,
-        ) || '';
-        if ($StateID) {
-            $States{$State} = $StateID;
+    if ( $StateDisplay eq 'StateName' )
+    {
+        %ConfiguredStates = %{ $Self->{Config}->{$StateDisplay} };
+        $SearchParamType  = "States";
+        $SearchParamURL   = "StateIDs";
 
-            # append StateID to URL for search string
-            $StateIDURL .= "StateIDs=$StateID;";
+        for my $StateOrder ( sort { $a <=> $b } keys %ConfiguredStates ) {
+            my $State = $ConfiguredStates{$StateOrder};
+
+            # check if state is found, to record StateID
+            my $StateID = $Kernel::OM->Get('Kernel::System::State')->StateLookup(
+                State => $State,
+            ) || '';
+            if ($StateID) {
+                $States{$State} = $StateID;
+
+                # append StateID to URL for search string
+                $StateIDURL .= "StateIDs=$StateID;";
+            }
+            else {
+
+                # state does not exist, skipping
+                delete $ConfiguredStates{$StateOrder};
+            }
         }
-        else {
+    }
+    elsif ( $StateDisplay eq 'StateType' )
+    {
+        %ConfiguredStates = %{ $Self->{Config}->{$StateDisplay} };
+        $SearchParamType  = "StateType";
+        $SearchParamURL   = "StateTypeIDs";
 
-            # state does not exist, skipping
-            delete $ConfiguredStates{$StateOrder};
+        for my $StateOrder ( sort { $a <=> $b } keys %ConfiguredStates ) {
+            my $StateType = $ConfiguredStates{$StateOrder};
+
+            # check if state is found, to record StateID
+            my $StateTypeID = $Kernel::OM->Get('Kernel::System::State')->StateTypeLookup(
+                StateType => $StateType,
+            ) || '';
+
+            if ($StateTypeID) {
+                $States{$StateType} = $StateTypeID;
+
+                # append StateID to URL for search string
+                $StateIDURL .= "StateTypeIDs=$StateTypeID;";
+            }
+            else {
+
+                # state does not exist, skipping
+                delete $ConfiguredStates{$StateOrder};
+            }
         }
     }
 
-	#get user object
-	my $UserObject = $Kernel::OM->Get('Kernel::System::User');
-	
-	my %UserList = $UserObject->UserList(
-        Type          => 'Short', 
-        Valid         => 1,       
-        NoOutOfOffice => 0, 
+    #get user object
+    my $UserObject = $Kernel::OM->Get('Kernel::System::User');
+
+    my %UserList = $UserObject->UserList(
+        Type          => 'Short',
+        Valid         => 1,
+        NoOutOfOffice => 0,
     );
 
-	my $Sort = $Self->{Config}->{Sort} || '';
+    my $Sort = $Self->{Config}->{Sort} || '';
 
     my %ResourcesToID;
     my $ResourcesIDURL;
 
-	# lookup users, add their UserID to new hash (needed for Search)
+    # lookup users, add their UserID to new hash (needed for Search)
     RESOURCES:
     for my $ResourcesID ( sort keys %UserList ) {
-		
+
         # add users to reverse hash
         $ResourcesToID{ $UserList{$ResourcesID} } = $ResourcesID;
 
@@ -136,42 +174,42 @@ sub Run {
         $ResourcesIDURL .= "OwnerIDs=$ResourcesID;";
     }
 
-	 # Prepare ticket count.
+    # Prepare ticket count.
     my $TicketObject = $Kernel::OM->Get('Kernel::System::Ticket');
-    my @ResourcesIDs     = sort keys %UserList;
+    my @ResourcesIDs = sort keys %UserList;
     if ( !@ResourcesIDs ) {
         @ResourcesIDs = (999_999);
     }
 
-	my %Results;
+    my %Results;
     for my $StateOrderID ( sort { $a <=> $b } keys %ConfiguredStates ) {
 
         # Run ticket search for all users (owner) and appropriate available State.
         my @StateOrderTicketIDs = $TicketObject->TicketSearch(
-            UserID   => $Self->{UserID},
-            Result   => 'ARRAY',
-			OwnerIDs => \@ResourcesIDs,
-            States   => [ $ConfiguredStates{$StateOrderID} ],
-            Limit    => 100_000,
+            UserID           => $Self->{UserID},
+            Result           => 'ARRAY',
+            OwnerIDs         => \@ResourcesIDs,
+            $SearchParamType => [ $ConfiguredStates{$StateOrderID} ],
+            Limit            => 100_000,
         );
 
-		my %OwnerCount;
-		
-		#return OwnerID => Count of ticket
-		for my $FoundTicketID (@StateOrderTicketIDs) 
-		{   
-			my ($OwnerID, $Owner) = $TicketObject->OwnerCheck(
-				TicketID => $FoundTicketID,
-			);
-			
-			if ( exists($OwnerCount{$OwnerID}) )
-			{
-				$OwnerCount{$OwnerID} = $OwnerCount{$OwnerID}+1;
-			}
-			else
-			{
-				$OwnerCount{$OwnerID} = 1;
-			}
+        my %OwnerCount;
+
+        #return OwnerID => Count of ticket
+        for my $FoundTicketID (@StateOrderTicketIDs)
+        {
+            my ( $OwnerID, $Owner ) = $TicketObject->OwnerCheck(
+                TicketID => $FoundTicketID,
+            );
+
+            if ( exists( $OwnerCount{$OwnerID} ) )
+            {
+                $OwnerCount{$OwnerID} = $OwnerCount{$OwnerID} + 1;
+            }
+            else
+            {
+                $OwnerCount{$OwnerID} = 1;
+            }
         }
 
         # Gather ticket count for corresponding Owner<-> State.
@@ -181,7 +219,7 @@ sub Run {
         }
     }
 
-	# build header
+    # build header
     my @Headers = ( 'Resources Owner', );
     for my $StateOrder ( sort { $a <=> $b } keys %ConfiguredStates ) {
         push @Headers, $ConfiguredStates{$StateOrder};
@@ -198,7 +236,7 @@ sub Run {
 
     my $HasContent;
 
-	# iterate over all owner, print results;
+    # iterate over all owner, print results;
     my @StatusTotal;
     RESOURCE:
     for my $Resource ( sort values %UserList ) {
@@ -209,15 +247,14 @@ sub Run {
         }
 
         $HasContent++;
-		
-		##get user fullname
-		my %UserFull = $UserObject->GetUserData(
-			User          => $Resource,
-			Valid         => 1,         
-			NoOutOfOffice => 0,
-		);
-	
-		
+
+        ##get user fullname
+        my %UserFull = $UserObject->GetUserData(
+            User          => $Resource,
+            Valid         => 1,
+            NoOutOfOffice => 0,
+        );
+
         $LayoutObject->Block(
             Name => 'ContentLargeTicketResourcesOverviewResourcesName',
             Data => {
@@ -233,11 +270,12 @@ sub Run {
             $LayoutObject->Block(
                 Name => 'ContentLargeTicketResourcesOverviewResourcesResults',
                 Data => {
-                    Number  => $Results{$Resource}->[$Counter],
-                    OwnerID => $ResourcesToID{$Resource},
-                    StateID => $States{ $ConfiguredStates{$StateOrderID} },
-                    State   => $ConfiguredStates{$StateOrderID},
-                    Sort    => $Sort,
+                    Number   => $Results{$Resource}->[$Counter],
+                    OwnerID  => $ResourcesToID{$Resource},
+                    URLParam => $SearchParamURL,
+                    StateID  => $States{ $ConfiguredStates{$StateOrderID} },
+                    State    => $ConfiguredStates{$StateOrderID},
+                    Sort     => $Sort,
                 },
             );
             $RowTotal                   += $Results{$Resource}->[$Counter] || 0;
@@ -258,7 +296,7 @@ sub Run {
 
     }
 
-	if ($HasContent) {
+    if ($HasContent) {
         $LayoutObject->Block(
             Name => 'ContentLargeTicketResourcesOverviewStatusTotalRow',
         );
@@ -268,7 +306,8 @@ sub Run {
                 Name => 'ContentLargeTicketResourcesOverviewStatusTotal',
                 Data => {
                     Number   => $StatusTotal[$StateOrderID],
-                    OwnerID => $ResourcesIDURL,
+                    OwnerID  => $ResourcesIDURL,
+                    URLParam => $SearchParamURL,
                     StateID  => $States{ $ConfiguredStates{$StateOrderID} },
                     Sort     => $Sort,
                 },

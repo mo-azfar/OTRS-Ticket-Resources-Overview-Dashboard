@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<otrs_package version="1.0">
+    <Name>Znuny-Ticket-Resources-Overview-Dashboard</Name>
+    <Version>7.0.2</Version>
+    <Framework>7.0.x</Framework>
+    <Framework>6.5.x</Framework>
+    <Vendor>mo-azfar</Vendor>
+    <URL>https://github.com/mo-azfar/</URL>
+    <License>GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007</License>
+    <Description Lang="en">Dashboard to Display Resources (Ticket Owner) Per Ticket States.</Description>
+    <ChangeLog Version="7.0.1" Date="2023-08-25 00:00:01 +0800">New package. Framework 7.0 and 6.5. only.</ChangeLog>
+    <ChangeLog Version="7.0.2" Date="2024-03-29 09:00:00 +0800">Add option to display based on StateType or StateName in system configuration.</ChangeLog>
+    <Filelist>
+        <File Permission="660" Location="Kernel/Config/Files/XML/ZZZTicketResourcesOverview.xml"/>
+        <File Permission="660" Location="Kernel/Output/HTML/Dashboard/TicketResourcesOverview.pm"/>
+        <File Permission="660" Location="Kernel/Output/HTML/Templates/Standard/AgentDashboardTicketResourcesOverview.tt"/>
+    </Filelist>
+    <IntroInstall Lang="en" Title="Install Information" Type="pre"><![CDATA[
+        <br/>
+        <b>WELCOME</b>
+        <br/>
+        <br/>
+        You are about to install the package Znuny-Ticket-Resources-Overview-Dashboard. Check <a href='https://github.com/mo-azfar/OTRS-Ticket-Resources-Overview-Dashboard/' target='_blank'/>README</a><br/>
+        <br/><br/>
+        ((enjoy))<br/>
+        <br/>
+    ]]></IntroInstall>
+    <IntroUpgrade Lang="en" Title="Upgrade Information" Type="pre"><![CDATA[
+        <br/>
+        Changelog<br/>
+        7.0.1 - New package.<br/>
+        7.0.2 - Add option to display based on StateType or StateName in system configuration.<br/><br/><br/>
+        <b>IMPORTANT! If you are updating from 7.0.1 and made changes in system configuration, please reset it's system configuration first before upgrade. Worst case scenario, unisntall then install new version.</b>
+        <br/><br/>
+        ((enjoy))<br/>
+        <br/>
+    ]]></IntroUpgrade>
+</otrs_package>

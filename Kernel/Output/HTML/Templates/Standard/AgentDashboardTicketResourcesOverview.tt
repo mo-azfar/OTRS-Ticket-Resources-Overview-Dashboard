@@ -1,5 +1,5 @@
 # --
-# Copyright (C) 2023 mo-azfar, https://github.com/mo-azfar/
+# Copyright (C) 2024 mo-azfar, https://github.com/mo-azfar/
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (GPL). If you
@@ -20,7 +20,7 @@
         <tr class="Row">
             <td><a class="AsBlock" href="[% Env("Baselink") %]Action=AgentTicketSearch;Subaction=Search;OwnerIDs=[% Data.ResourceID | uri %]">[% Data.ResourceName | html %]</a></td>
 [% RenderBlockStart("ContentLargeTicketResourcesOverviewResourcesResults") %]
-            <td><a class="AsBlock" href="[% Env("Baselink") %]Action=AgentTicketSearch;Subaction=Search;[% Env("ChallengeTokenParam") | html %];StateIDs=[% Data.StateID | uri %];OwnerIDs=[% Data.OwnerID | uri %];[% Data.Sort | html %]">[% Translate(Data.Number) | html %]</a></td>
+            <td><a class="AsBlock" href="[% Env("Baselink") %]Action=AgentTicketSearch;Subaction=Search;[% Env("ChallengeTokenParam") | html %];[% Data.URLParam | uri %]=[% Data.StateID | uri %];OwnerIDs=[% Data.OwnerID | uri %];[% Data.Sort | html %]">[% Translate(Data.Number) | html %]</a></td>
 [% RenderBlockEnd("ContentLargeTicketResourcesOverviewResourcesResults") %]
 [% RenderBlockStart("ContentLargeTicketResourcesOverviewResourcesTotal") %]
             <td><a class="QueueOverviewTotals AsBlock" href="[% Env("Baselink") %]Action=AgentTicketSearch;Subaction=Search;[% Env("ChallengeTokenParam") | html %];OwnerIDs=[% Data.OwnerID | uri %];[% Data.StateIDs | html %];[% Data.Sort | html %]">[% Translate(Data.Number) | html %]</a></td>
@@ -31,7 +31,7 @@
         <tr class="Row">
             <td class="QueueOverviewTotals">[% Translate("Total") | html %]</td>
 [% RenderBlockStart("ContentLargeTicketResourcesOverviewStatusTotal") %]
-            <td class="QueueOverviewTotals"><a class="AsBlock" href="[% Env("Baselink") %]Action=AgentTicketSearch;Subaction=Search;[% Env("ChallengeTokenParam") | html %];StateIDs=[% Data.StateID | uri %];[% Data.OwnerIDs | html %];[% Data.Sort | html %]">[% Translate(Data.Number) | html %]</a></td>
+            <td class="QueueOverviewTotals"><a class="AsBlock" href="[% Env("Baselink") %]Action=AgentTicketSearch;Subaction=Search;[% Env("ChallengeTokenParam") | html %];[% Data.URLParam | uri %]=[% Data.StateID | uri %];[% Data.OwnerIDs | html %];[% Data.Sort | html %]">[% Translate(Data.Number) | html %]</a></td>
 [% RenderBlockEnd("ContentLargeTicketResourcesOverviewStatusTotal") %]
             <td class="QueueOverviewTotals"></td>
         </tr>
